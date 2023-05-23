@@ -1,4 +1,5 @@
 ﻿using DG.Common.Exceptions;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,7 +7,7 @@ using System.Text;
 
 namespace DG.Yaml
 {
-    public class LineReader
+    public class LineReader : IDisposable
     {
         private const int _bufferSize = 1024;
 
@@ -15,10 +16,11 @@ namespace DG.Yaml
         private readonly Dictionary<int, long> _lineOffsets;
 
         private long _currentLineOffset;
-        private int _bytesRead;
+        private int _totalBytesRead;
+        private int _bytesAvailable;
         private int _bufferIndex;
 
-        private int _lineNumber = 0;
+        private int _lineNumber;
 
         /// <summary>
         /// The zero-based index of the next line that wil be read using <see cref="ReadLine"/>.
@@ -36,16 +38,17 @@ namespace DG.Yaml
             ThrowIf.Stream(stream, nameof(stream)).CannotSeek();
             _stream = stream;
 
-            ResetLine();
+            ResetCurrentLine(0);
 
             _lineOffsets = new Dictionary<int, long>();
             _lineOffsets[0] = _currentLineOffset;
         }
 
-        private void ResetLine()
+        private void ResetCurrentLine(int lineNumber)
         {
+            _lineNumber = lineNumber;
             _currentLineOffset = _stream.Position;
-            _bytesRead = 0;
+            _bytesAvailable = 0;
         }
 
         /// <summary>
@@ -60,13 +63,11 @@ namespace DG.Yaml
             StringBuilder lineBuilder = new StringBuilder();
             while (!found)
             {
-                if (_bytesRead <= 0)
+                if (_bytesAvailable <= 0)
                 {
-                    // Read next block
-                    _bufferIndex = 0;
-                    _bytesRead = _stream.Read(_buffer, 0, _bufferSize);
-                    if (_bytesRead == 0)
+                    if (!TryFillBuffer())
                     {
+                        //end of stream reached.
                         if (lineBuilder.Length > 0)
                         {
                             break;
@@ -75,11 +76,8 @@ namespace DG.Yaml
                     }
                 }
 
-                for (int max = _bufferIndex + _bytesRead; _bufferIndex < max;)
+                while (TryGetNextCharacter(out char ch))
                 {
-                    char ch = (char)_buffer[_bufferIndex];
-                    _bytesRead--;
-                    _bufferIndex++;
                     bytesInLine++;
 
                     if (ch == '\0' || ch == '\n')
@@ -87,10 +85,11 @@ namespace DG.Yaml
                         found = true;
                         break;
                     }
-                    else if (ch == '\r')
+                    if (ch == '\r')
                     {
                         continue;
                     }
+
                     lineBuilder.Append(ch);
                 }
             }
@@ -101,40 +100,80 @@ namespace DG.Yaml
             return lineBuilder.ToString();
         }
 
-        public void SeekLine(int lineNumber, SeekOrigin origin)
+        private bool TryGetNextCharacter(out char ch)
         {
-            if (_lineOffsets.ContainsKey(lineNumber))
+            if (_bufferIndex >= _totalBytesRead)
             {
-                _stream.Seek(_lineOffsets[lineNumber], origin);
-                _lineNumber = lineNumber;
-                ResetLine();
-                return;
+                ch = '\0';
+                return false;
             }
 
-            int highestLine = _lineOffsets.Keys.Max();
-            SeekLine(highestLine, origin);
+            ch = (char)_buffer[_bufferIndex];
+            _bytesAvailable--;
+            _bufferIndex++;
+            return true;
+        }
 
+        private bool TryFillBuffer()
+        {
+            _bufferIndex = 0;
+            _totalBytesRead = _stream.Read(_buffer, 0, _bufferSize);
+            _bytesAvailable = _totalBytesRead;
+            return _bytesAvailable > 0;
+        }
+
+        /// <summary>
+        /// Sets the position of the current <see cref="LineReader"/> to the start of the given line>.
+        /// </summary>
+        /// <param name="lineNumber">The zero-based index of a line.</param>
+        /// <returns>A value indicating if the end of the <see cref="Stream"/> was reached before the line number was found.</returns>
+        /// <exception cref="ArgumentException"></exception>
+        public bool SeekLine(int lineNumber)
+        {
+            ThrowIf.Number(lineNumber, nameof(lineNumber)).IsNegative();
+
+            if (_lineOffsets.ContainsKey(lineNumber))
+            {
+                _stream.Seek(_lineOffsets[lineNumber], SeekOrigin.Begin);
+                ResetCurrentLine(lineNumber);
+                return true;
+            }
+
+            SeekLastLine();
+            return TryReadUntill(lineNumber);
+        }
+
+        private void SeekLastLine()
+        {
+            int highestLine = _lineOffsets.Keys.Max();
+            SeekLine(highestLine);
+        }
+
+        private bool TryReadUntill(int lineNumber)
+        {
             while (ReadLine() != null)
             {
                 if (lineNumber == _lineNumber)
                 {
-                    return;
+                    return true;
                 }
             }
+            return false;
         }
 
+        #region IDisposable support
         private bool _disposed;
         /// <summary>
-        /// Free resources
+        /// Releases all resources used by the <see cref="LineReader"/>, including the underlying <see cref="Stream"/>.
         /// </summary>
         public void Dispose()
         {
             if (!_disposed)
             {
-                _stream.Close();
                 _stream.Dispose();
                 _disposed = true;
             }
         }
+        #endregion
     }
 }
