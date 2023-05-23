@@ -9,6 +9,7 @@
         public static Tag Int { get; } = new Tag("tag:yaml.org,2002:int");
         public static Tag Float { get; } = new Tag("tag:yaml.org,2002:float");
         public static Tag String { get; } = new Tag("tag:yaml.org,2002:str");
+        public static Tag Timestamp { get; } = new Tag("tag:yaml.org,2002:timestamp");
 
         public string Name { get; set; }
 
