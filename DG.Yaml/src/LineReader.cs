@@ -38,7 +38,7 @@ namespace DG.Yaml
             ThrowIf.Stream(stream, nameof(stream)).CannotRead();
             ThrowIf.Stream(stream, nameof(stream)).CannotSeek();
             _stream = stream;
-            _reader = new BinaryReader(_stream, Encoding.Unicode, true);
+            _reader = new BinaryReader(_stream, Encoding.UTF8, true);
 
             ResetCurrentLine(0);
 
