@@ -12,6 +12,7 @@ namespace DG.Yaml
         private const int _bufferSize = 1024;
 
         private readonly Stream _stream;
+        private readonly BinaryReader _reader;
         private readonly byte[] _buffer = new byte[_bufferSize];
         private readonly Dictionary<int, long> _lineOffsets;
 
@@ -37,6 +38,7 @@ namespace DG.Yaml
             ThrowIf.Stream(stream, nameof(stream)).CannotRead();
             ThrowIf.Stream(stream, nameof(stream)).CannotSeek();
             _stream = stream;
+            _reader = new BinaryReader(_stream, Encoding.Unicode, true);
 
             ResetCurrentLine(0);
 
@@ -58,68 +60,58 @@ namespace DG.Yaml
         public string ReadLine()
         {
             long bytesInLine = 0;
-            bool found = false;
 
             StringBuilder lineBuilder = new StringBuilder();
-            while (!found)
+            while (TryGetNextCharacter(out char ch))
             {
-                if (_bytesAvailable <= 0)
+                bytesInLine++;
+
+                if (ch == '\0' || ch == '\n')
                 {
-                    if (!TryFillBuffer())
-                    {
-                        //end of stream reached.
-                        if (lineBuilder.Length > 0)
-                        {
-                            break;
-                        }
-                        return null;
-                    }
+                    return lineBuilder.ToString();
+                }
+                if (ch == '\r')
+                {
+                    continue;
                 }
 
-                while (TryGetNextCharacter(out char ch))
-                {
-                    bytesInLine++;
-
-                    if (ch == '\0' || ch == '\n')
-                    {
-                        found = true;
-                        break;
-                    }
-                    if (ch == '\r')
-                    {
-                        continue;
-                    }
-
-                    lineBuilder.Append(ch);
-                }
+                lineBuilder.Append(ch);
             }
-
-            _lineNumber++;
-            _currentLineOffset += bytesInLine;
-            _lineOffsets[_lineNumber] = _currentLineOffset;
             return lineBuilder.ToString();
         }
 
         private bool TryGetNextCharacter(out char ch)
         {
-            if (_bufferIndex >= _totalBytesRead)
+            ch = '\0';
+            int numRead = Math.Min(4, (int)(_stream.Length - _stream.Position));
+            if (numRead == 0)
             {
-                ch = '\0';
+                return false;
+            }
+            byte[] bytes = _reader.ReadBytes(numRead);
+            char[] chars = Encoding.UTF8.GetChars(bytes);
+
+            if (chars.Length == 0)
+            {
                 return false;
             }
 
-            ch = (char)_buffer[_bufferIndex];
-            _bytesAvailable--;
-            _bufferIndex++;
+            int usedBytes = Encoding.UTF8.GetByteCount(new char[] { chars[0] });
+
+            _stream.Position -= (numRead - usedBytes);
+
+            ch = chars[0];
+            SavePositionOnNewline(ch);
             return true;
         }
 
-        private bool TryFillBuffer()
+        private void SavePositionOnNewline(char ch)
         {
-            _bufferIndex = 0;
-            _totalBytesRead = _stream.Read(_buffer, 0, _bufferSize);
-            _bytesAvailable = _totalBytesRead;
-            return _bytesAvailable > 0;
+            if (ch == '\0' || ch == '\n')
+            {
+                _lineNumber++;
+                _lineOffsets[_lineNumber] = _stream.Position;
+            }
         }
 
         /// <summary>
