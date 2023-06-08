@@ -9,18 +9,12 @@ namespace DG.Yaml
 {
     public class LineReader : IDisposable
     {
-        private const int _bufferSize = 1024;
-
         private readonly Stream _stream;
-        private readonly byte[] _buffer = new byte[_bufferSize];
+        private readonly BinaryReader _reader;
+        private readonly Encoding _encoding;
+
         private readonly Dictionary<int, long> _lineOffsets;
-
-        private long _currentLineOffset;
-        private int _totalBytesRead;
-        private int _bytesAvailable;
-        private int _bufferIndex;
-
-        private int _lineNumber;
+        private int _lineNumber = 0;
 
         /// <summary>
         /// The zero-based index of the next line that wil be read using <see cref="ReadLine"/>.
@@ -28,27 +22,30 @@ namespace DG.Yaml
         public int CurrentLineNumber => _lineNumber;
 
         /// <summary>
-        /// Constructor
+        /// Initializes a new instance of <see cref="LineReader"/> with the given stream and encoding.
         /// </summary>
         /// <param name="stream">Stream</param>
-        public LineReader(Stream stream)
+        public LineReader(Stream stream, Encoding encoding)
         {
             ThrowIf.Parameter.IsNull(stream, nameof(stream));
             ThrowIf.Stream(stream, nameof(stream)).CannotRead();
             ThrowIf.Stream(stream, nameof(stream)).CannotSeek();
+            ThrowIf.Parameter.IsNull(encoding, nameof(encoding));
             _stream = stream;
-
-            ResetCurrentLine(0);
+            _reader = new BinaryReader(_stream, Encoding.UTF8, true);
+            _encoding = encoding;
 
             _lineOffsets = new Dictionary<int, long>();
-            _lineOffsets[0] = _currentLineOffset;
+            _lineOffsets[0] = _stream.Position;
         }
 
-        private void ResetCurrentLine(int lineNumber)
+        /// <summary>
+        /// Initializes a new instance of <see cref="LineReader"/> with the given stream, and <see cref="Encoding.UTF8"/> as the default encoding.
+        /// </summary>
+        /// <param name="stream"></param>
+        public LineReader(Stream stream) : this(stream, Encoding.UTF8)
         {
-            _lineNumber = lineNumber;
-            _currentLineOffset = _stream.Position;
-            _bytesAvailable = 0;
+
         }
 
         /// <summary>
@@ -58,68 +55,62 @@ namespace DG.Yaml
         public string ReadLine()
         {
             long bytesInLine = 0;
-            bool found = false;
 
             StringBuilder lineBuilder = new StringBuilder();
-            while (!found)
+            while (TryGetNextCharacter(out char ch))
             {
-                if (_bytesAvailable <= 0)
+                bytesInLine++;
+
+                if (ch == '\0' || ch == '\n')
                 {
-                    if (!TryFillBuffer())
-                    {
-                        //end of stream reached.
-                        if (lineBuilder.Length > 0)
-                        {
-                            break;
-                        }
-                        return null;
-                    }
+                    return lineBuilder.ToString();
+                }
+                if (ch == '\r')
+                {
+                    continue;
                 }
 
-                while (TryGetNextCharacter(out char ch))
-                {
-                    bytesInLine++;
-
-                    if (ch == '\0' || ch == '\n')
-                    {
-                        found = true;
-                        break;
-                    }
-                    if (ch == '\r')
-                    {
-                        continue;
-                    }
-
-                    lineBuilder.Append(ch);
-                }
+                lineBuilder.Append(ch);
             }
-
-            _lineNumber++;
-            _currentLineOffset += bytesInLine;
-            _lineOffsets[_lineNumber] = _currentLineOffset;
+            if (bytesInLine == 0)
+            {
+                return null;
+            }
             return lineBuilder.ToString();
         }
 
-        private bool TryGetNextCharacter(out char ch)
+        public bool TryGetNextCharacter(out char character)
         {
-            if (_bufferIndex >= _totalBytesRead)
+            character = '\0';
+            int numRead = Math.Min(4, (int)(_stream.Length - _stream.Position));
+            if (numRead == 0)
             {
-                ch = '\0';
+                return false;
+            }
+            byte[] bytes = _reader.ReadBytes(numRead);
+            char[] chars = _encoding.GetChars(bytes);
+
+            if (chars.Length == 0)
+            {
                 return false;
             }
 
-            ch = (char)_buffer[_bufferIndex];
-            _bytesAvailable--;
-            _bufferIndex++;
+            int usedBytes = _encoding.GetByteCount(new char[] { chars[0] });
+
+            _stream.Position -= (numRead - usedBytes);
+
+            character = chars[0];
+            SavePositionOnNewline(character);
             return true;
         }
 
-        private bool TryFillBuffer()
+        private void SavePositionOnNewline(char ch)
         {
-            _bufferIndex = 0;
-            _totalBytesRead = _stream.Read(_buffer, 0, _bufferSize);
-            _bytesAvailable = _totalBytesRead;
-            return _bytesAvailable > 0;
+            if (ch == '\0' || ch == '\n')
+            {
+                _lineNumber++;
+                _lineOffsets[_lineNumber] = _stream.Position;
+            }
         }
 
         /// <summary>
@@ -135,7 +126,7 @@ namespace DG.Yaml
             if (_lineOffsets.ContainsKey(lineNumber))
             {
                 _stream.Seek(_lineOffsets[lineNumber], SeekOrigin.Begin);
-                ResetCurrentLine(lineNumber);
+                _lineNumber = lineNumber;
                 return true;
             }
 
@@ -170,6 +161,7 @@ namespace DG.Yaml
         {
             if (!_disposed)
             {
+                _reader.Dispose();
                 _stream.Dispose();
                 _disposed = true;
             }
