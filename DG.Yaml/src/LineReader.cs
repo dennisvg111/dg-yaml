@@ -9,19 +9,12 @@ namespace DG.Yaml
 {
     public class LineReader : IDisposable
     {
-        private const int _bufferSize = 1024;
-
         private readonly Stream _stream;
         private readonly BinaryReader _reader;
-        private readonly byte[] _buffer = new byte[_bufferSize];
+        private readonly Encoding _encoding;
+
         private readonly Dictionary<int, long> _lineOffsets;
-
-        private long _currentLineOffset;
-        private int _totalBytesRead;
-        private int _bytesAvailable;
-        private int _bufferIndex;
-
-        private int _lineNumber;
+        private int _lineNumber = 0;
 
         /// <summary>
         /// The zero-based index of the next line that wil be read using <see cref="ReadLine"/>.
@@ -29,28 +22,30 @@ namespace DG.Yaml
         public int CurrentLineNumber => _lineNumber;
 
         /// <summary>
-        /// Constructor
+        /// Initializes a new instance of <see cref="LineReader"/> with the given stream and encoding.
         /// </summary>
         /// <param name="stream">Stream</param>
-        public LineReader(Stream stream)
+        public LineReader(Stream stream, Encoding encoding)
         {
             ThrowIf.Parameter.IsNull(stream, nameof(stream));
             ThrowIf.Stream(stream, nameof(stream)).CannotRead();
             ThrowIf.Stream(stream, nameof(stream)).CannotSeek();
+            ThrowIf.Parameter.IsNull(encoding, nameof(encoding));
             _stream = stream;
             _reader = new BinaryReader(_stream, Encoding.UTF8, true);
-
-            ResetCurrentLine(0);
+            _encoding = encoding;
 
             _lineOffsets = new Dictionary<int, long>();
-            _lineOffsets[0] = _currentLineOffset;
+            _lineOffsets[0] = _stream.Position;
         }
 
-        private void ResetCurrentLine(int lineNumber)
+        /// <summary>
+        /// Initializes a new instance of <see cref="LineReader"/> with the given stream, and <see cref="Encoding.UTF8"/> as the default encoding.
+        /// </summary>
+        /// <param name="stream"></param>
+        public LineReader(Stream stream) : this(stream, Encoding.UTF8)
         {
-            _lineNumber = lineNumber;
-            _currentLineOffset = _stream.Position;
-            _bytesAvailable = 0;
+
         }
 
         /// <summary>
@@ -77,31 +72,35 @@ namespace DG.Yaml
 
                 lineBuilder.Append(ch);
             }
+            if (bytesInLine == 0)
+            {
+                return null;
+            }
             return lineBuilder.ToString();
         }
 
-        private bool TryGetNextCharacter(out char ch)
+        public bool TryGetNextCharacter(out char character)
         {
-            ch = '\0';
+            character = '\0';
             int numRead = Math.Min(4, (int)(_stream.Length - _stream.Position));
             if (numRead == 0)
             {
                 return false;
             }
             byte[] bytes = _reader.ReadBytes(numRead);
-            char[] chars = Encoding.UTF8.GetChars(bytes);
+            char[] chars = _encoding.GetChars(bytes);
 
             if (chars.Length == 0)
             {
                 return false;
             }
 
-            int usedBytes = Encoding.UTF8.GetByteCount(new char[] { chars[0] });
+            int usedBytes = _encoding.GetByteCount(new char[] { chars[0] });
 
             _stream.Position -= (numRead - usedBytes);
 
-            ch = chars[0];
-            SavePositionOnNewline(ch);
+            character = chars[0];
+            SavePositionOnNewline(character);
             return true;
         }
 
@@ -127,7 +126,7 @@ namespace DG.Yaml
             if (_lineOffsets.ContainsKey(lineNumber))
             {
                 _stream.Seek(_lineOffsets[lineNumber], SeekOrigin.Begin);
-                ResetCurrentLine(lineNumber);
+                _lineNumber = lineNumber;
                 return true;
             }
 
@@ -162,6 +161,7 @@ namespace DG.Yaml
         {
             if (!_disposed)
             {
+                _reader.Dispose();
                 _stream.Dispose();
                 _disposed = true;
             }
