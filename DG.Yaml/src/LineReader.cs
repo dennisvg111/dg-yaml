@@ -9,9 +9,7 @@ namespace DG.Yaml
 {
     public class LineReader : IDisposable
     {
-        private readonly Stream _stream;
-        private readonly BinaryReader _reader;
-        private readonly Encoding _encoding;
+        private readonly CharacterReader _reader;
 
         private readonly Dictionary<int, long> _lineOffsets;
         private int _lineNumber = 0;
@@ -31,12 +29,10 @@ namespace DG.Yaml
             ThrowIf.Stream(stream, nameof(stream)).CannotRead();
             ThrowIf.Stream(stream, nameof(stream)).CannotSeek();
             ThrowIf.Parameter.IsNull(encoding, nameof(encoding));
-            _stream = stream;
-            _reader = new BinaryReader(_stream, Encoding.UTF8, true);
-            _encoding = encoding;
+            _reader = new CharacterReader(stream, encoding);
 
             _lineOffsets = new Dictionary<int, long>();
-            _lineOffsets[0] = _stream.Position;
+            _lineOffsets[0] = _reader.Position;
         }
 
         /// <summary>
@@ -57,8 +53,9 @@ namespace DG.Yaml
             long bytesInLine = 0;
 
             StringBuilder lineBuilder = new StringBuilder();
-            while (TryGetNextCharacter(out char ch))
+            while (_reader.TryRead(out char ch))
             {
+                SavePositionOnNewline(ch);
                 bytesInLine++;
 
                 if (ch == '\0' || ch == '\n')
@@ -79,37 +76,12 @@ namespace DG.Yaml
             return lineBuilder.ToString();
         }
 
-        public bool TryGetNextCharacter(out char character)
-        {
-            character = '\0';
-            int numRead = Math.Min(4, (int)(_stream.Length - _stream.Position));
-            if (numRead == 0)
-            {
-                return false;
-            }
-            byte[] bytes = _reader.ReadBytes(numRead);
-            char[] chars = _encoding.GetChars(bytes);
-
-            if (chars.Length == 0)
-            {
-                return false;
-            }
-
-            int usedBytes = _encoding.GetByteCount(new char[] { chars[0] });
-
-            _stream.Position -= (numRead - usedBytes);
-
-            character = chars[0];
-            SavePositionOnNewline(character);
-            return true;
-        }
-
         private void SavePositionOnNewline(char ch)
         {
             if (ch == '\0' || ch == '\n')
             {
                 _lineNumber++;
-                _lineOffsets[_lineNumber] = _stream.Position;
+                _lineOffsets[_lineNumber] = _reader.Position;
             }
         }
 
@@ -125,7 +97,7 @@ namespace DG.Yaml
 
             if (_lineOffsets.ContainsKey(lineNumber))
             {
-                _stream.Seek(_lineOffsets[lineNumber], SeekOrigin.Begin);
+                _reader.Seek(_lineOffsets[lineNumber], SeekOrigin.Begin);
                 _lineNumber = lineNumber;
                 return true;
             }
@@ -162,7 +134,6 @@ namespace DG.Yaml
             if (!_disposed)
             {
                 _reader.Dispose();
-                _stream.Dispose();
                 _disposed = true;
             }
         }
