@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using DG.Yaml.Parsers;
+using System.Collections.Generic;
 
 namespace DG.Yaml.Tokenization
 {
@@ -51,6 +52,12 @@ namespace DG.Yaml.Tokenization
 
 
             return;
+        }
+
+        private void GetPlainScalarToken()
+        {
+            var scalar = new Scalar();
+
         }
 
         private void SkipToTokenStart()
