@@ -1,4 +1,4 @@
-﻿namespace DG.Yaml.Parsers
+﻿namespace DG.Yaml.Tokenization
 {
     public enum TokenType
     {

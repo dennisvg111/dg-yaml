@@ -1,4 +1,4 @@
-﻿namespace DG.Yaml.Parsers
+﻿namespace DG.Yaml.Tokenization
 {
     public class Token
     {
@@ -17,6 +17,11 @@
         public static Token ForStreamStart()
         {
             return new Token(TokenType.StreamStart, null);
+        }
+
+        public static Token ForStreamEnd()
+        {
+            return new Token(TokenType.StreamEnd, null);
         }
     }
 }
