@@ -58,6 +58,14 @@ namespace DG.Yaml.Tokenization
         {
             var scalar = new Scalar();
 
+            while (true)
+            {
+
+                while (_state.CurrentCharacter == ' ' || )
+                {
+
+                }
+            }
         }
 
         private void SkipToTokenStart()
