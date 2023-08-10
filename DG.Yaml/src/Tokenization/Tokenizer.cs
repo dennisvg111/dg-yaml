@@ -37,7 +37,7 @@ namespace DG.Yaml.Tokenization
             {
                 _state.SetStreamStartTokenized();
                 _tokens.Enqueue(Token.ForStreamStart());
-                AdvanceReader(1);
+                AdvanceState(1);
                 return;
             }
 
@@ -61,7 +61,27 @@ namespace DG.Yaml.Tokenization
             while (true)
             {
 
-                while (_state.CurrentCharacter == ' ' || )
+                while (_state.CanRead && !_state.CurrentCharacter.IsEmpty())
+                {
+                    if (_state.CurrentCharacter == Characters.MappingValue)
+                    {
+                        bool hasNextCharacter = _reader.TryPeek(out char nextCharacter);
+                        if (!hasNextCharacter || nextCharacter.IsEmpty())
+                        {
+                            break;
+                        }
+                    }
+
+                    scalar.Write(_state.CurrentCharacter);
+                    AdvanceState(1);
+                }
+
+                if (!_state.CurrentCharacter.IsEmpty())
+                {
+                    break;
+                }
+
+                while (_state.CurrentCharacter.IsEmpty())
                 {
 
                 }
@@ -81,11 +101,11 @@ namespace DG.Yaml.Tokenization
                     default:
                         return;
                 }
-                AdvanceReader(1);
+                AdvanceState(1);
             }
         }
 
-        private void AdvanceReader(int count)
+        private void AdvanceState(int count)
         {
             for (int i = 0; i < count; i++)
             {

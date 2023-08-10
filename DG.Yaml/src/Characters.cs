@@ -40,4 +40,16 @@ namespace DG.Yaml
             return c == SequenceStart || c == SequenceEnd || c == MappingStart || c == MappingEnd || c == CollectEntry;
         }
     }
+
+    public static class CharacterExtensions
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsEmpty(this char c)
+        {
+            return c == ' '
+                || c == '\t'
+                || c == '\r'
+                || c == '\n';
+        }
+    }
 }

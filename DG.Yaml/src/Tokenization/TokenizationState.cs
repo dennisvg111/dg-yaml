@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace DG.Yaml.Tokenization
+﻿namespace DG.Yaml.Tokenization
 {
     public class TokenizationState
     {
@@ -54,15 +52,6 @@ namespace DG.Yaml.Tokenization
             }
 
             _currentColumn++;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool IsEmpty()
-        {
-            return _currentCharacter == ' '
-                || _currentCharacter == '\t'
-                || _currentCharacter == '\r'
-                || _currentCharacter == '\n';
         }
     }
 }
