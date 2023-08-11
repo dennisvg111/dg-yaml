@@ -1,6 +1,7 @@
 ﻿using DG.Common.Exceptions;
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace DG.Yaml
@@ -104,6 +105,7 @@ namespace DG.Yaml
             return numRead;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsNext(string input)
         {
             int count = input.Length;

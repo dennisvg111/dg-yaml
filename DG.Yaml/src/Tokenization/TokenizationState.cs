@@ -1,7 +1,8 @@
 ﻿namespace DG.Yaml.Tokenization
 {
-    public class TokenizationState
+    public class TokenizationState : ITokenizationState
     {
+        private readonly CharacterReader _reader;
         private bool _streamStartTokenized;
         private bool _canRead;
         private char _currentCharacter;
@@ -15,8 +16,10 @@
         public int CurrentLine => _currentLine;
         public int CurrentColumn => _currentColumn;
 
-        public TokenizationState()
+        public TokenizationState(CharacterReader reader)
         {
+            _reader = reader;
+
             _streamStartTokenized = false;
             _canRead = true;
             _currentCharacter = '\0';
@@ -29,7 +32,44 @@
             _streamStartTokenized = true;
         }
 
-        public void UpdateState(bool streamEnded, char character)
+        public bool TryPeekNextCharacter(out char ch)
+        {
+            return _reader.TryPeek(out ch);
+        }
+
+        public bool IsNext(char c)
+        {
+            if (!_reader.TryPeek(out char ch))
+            {
+                return false;
+            }
+            return ch == c;
+        }
+
+        public bool IsCurrent(string input)
+        {
+            if (!CanRead || CurrentCharacter != input[0])
+            {
+                return false;
+            }
+            return IsNext(input.Substring(1));
+        }
+
+        public bool IsNext(string input)
+        {
+            return _reader.IsNext(input);
+        }
+
+        public void Advance(int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                bool canRead = _reader.TryRead(out char ch);
+                UpdateState(!canRead, ch);
+            }
+        }
+
+        private void UpdateState(bool streamEnded, char character)
         {
             if (!streamEnded)
             {

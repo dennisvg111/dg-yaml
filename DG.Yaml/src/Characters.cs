@@ -2,7 +2,7 @@
 
 namespace DG.Yaml
 {
-    public class Characters
+    public static class Characters
     {
         public const char Space = ' ';
         public const char Tab = '\t';
@@ -35,7 +35,7 @@ namespace DG.Yaml
         public const char Reserved2 = '`';
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool IsFlowStructureIndicator(char c)
+        public static bool IsFlowStructureIndicator(char c)
         {
             return c == SequenceStart || c == SequenceEnd || c == MappingStart || c == MappingEnd || c == CollectEntry;
         }

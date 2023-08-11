@@ -1,5 +1,4 @@
-﻿using DG.Yaml.Parsers;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace DG.Yaml.Tokenization
 {
@@ -16,7 +15,7 @@ namespace DG.Yaml.Tokenization
         {
             _reader = reader;
             _tokens = new Queue<Token>();
-            _state = new TokenizationState();
+            _state = new TokenizationState(reader);
         }
 
         public bool TryRead()
@@ -37,7 +36,7 @@ namespace DG.Yaml.Tokenization
             {
                 _state.SetStreamStartTokenized();
                 _tokens.Enqueue(Token.ForStreamStart());
-                AdvanceState(1);
+                _state.Advance(1);
                 return;
             }
 
@@ -54,40 +53,6 @@ namespace DG.Yaml.Tokenization
             return;
         }
 
-        private void GetPlainScalarToken()
-        {
-            var scalar = new Scalar();
-
-            while (true)
-            {
-
-                while (_state.CanRead && !_state.CurrentCharacter.IsEmpty())
-                {
-                    if (_state.CurrentCharacter == Characters.MappingValue)
-                    {
-                        bool hasNextCharacter = _reader.TryPeek(out char nextCharacter);
-                        if (!hasNextCharacter || nextCharacter.IsEmpty())
-                        {
-                            break;
-                        }
-                    }
-
-                    scalar.Write(_state.CurrentCharacter);
-                    AdvanceState(1);
-                }
-
-                if (!_state.CurrentCharacter.IsEmpty())
-                {
-                    break;
-                }
-
-                while (_state.CurrentCharacter.IsEmpty())
-                {
-
-                }
-            }
-        }
-
         private void SkipToTokenStart()
         {
             while (_state.CanRead)
@@ -101,16 +66,7 @@ namespace DG.Yaml.Tokenization
                     default:
                         return;
                 }
-                AdvanceState(1);
-            }
-        }
-
-        private void AdvanceState(int count)
-        {
-            for (int i = 0; i < count; i++)
-            {
-                bool canRead = _reader.TryRead(out char ch);
-                _state.UpdateState(!canRead, ch);
+                _state.Advance(1);
             }
         }
     }
