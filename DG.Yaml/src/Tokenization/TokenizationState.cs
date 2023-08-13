@@ -6,14 +6,12 @@
         private bool _streamStartTokenized;
         private bool _canRead;
         private char _currentCharacter;
-        private int _currentLine;
         private int _currentColumn;
 
         public bool StreamStartTokenized => _streamStartTokenized;
         public bool CanRead => _canRead;
         public char CurrentCharacter => _currentCharacter;
 
-        public int CurrentLine => _currentLine;
         public int CurrentColumn => _currentColumn;
 
         public TokenizationState(CharacterReader reader)
@@ -23,7 +21,6 @@
             _streamStartTokenized = false;
             _canRead = true;
             _currentCharacter = '\0';
-            _currentLine = 0;
             _currentColumn = -1;
         }
 
@@ -86,7 +83,6 @@
         {
             if (_currentCharacter == '\n')
             {
-                _currentLine++;
                 _currentColumn = 0;
                 return;
             }

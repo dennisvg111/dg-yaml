@@ -6,7 +6,6 @@
         bool CanRead { get; }
         char CurrentCharacter { get; }
 
-        int CurrentLine { get; }
         int CurrentColumn { get; }
 
         void Advance(int count);
