@@ -37,7 +37,7 @@ namespace DG.Yaml.Tokenization
 
         public bool IsDocumentIndicator()
         {
-            if (_state.CurrentColumn != 0)
+            if (_state.CharactersSinceNewline != 0)
             {
                 return false;
             }

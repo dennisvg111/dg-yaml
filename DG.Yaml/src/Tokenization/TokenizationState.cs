@@ -3,30 +3,23 @@
     public class TokenizationState : ITokenizationState
     {
         private readonly CharacterReader _reader;
-        private bool _streamStartTokenized;
         private bool _canRead;
         private char _currentCharacter;
-        private int _currentColumn;
+        private int _charactersSinceNewline;
 
-        public bool StreamStartTokenized => _streamStartTokenized;
+        public bool StartedReading => _charactersSinceNewline >= 0;
         public bool CanRead => _canRead;
         public char CurrentCharacter => _currentCharacter;
 
-        public int CurrentColumn => _currentColumn;
+        public int CharactersSinceNewline => _charactersSinceNewline;
 
         public TokenizationState(CharacterReader reader)
         {
             _reader = reader;
 
-            _streamStartTokenized = false;
             _canRead = true;
             _currentCharacter = '\0';
-            _currentColumn = -1;
-        }
-
-        public void SetStreamStartTokenized()
-        {
-            _streamStartTokenized = true;
+            _charactersSinceNewline = -1;
         }
 
         public bool TryPeekNextCharacter(out char ch)
@@ -83,11 +76,11 @@
         {
             if (_currentCharacter == '\n')
             {
-                _currentColumn = 0;
+                _charactersSinceNewline = 0;
                 return;
             }
 
-            _currentColumn++;
+            _charactersSinceNewline++;
         }
     }
 }
