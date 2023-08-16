@@ -6,9 +6,14 @@ namespace DG.Yaml.Tokenization
     {
         private readonly CharacterReader _reader;
         private readonly Queue<Token> _tokens;
-        private TokenizationState _state;
+        private readonly TokenizationState _state;
 
-        public Queue<Token> Tokens => new Queue<Token>(_tokens);
+        private readonly PlainScalarTokenizer _plainScalarTokenizer;
+
+        public Token ConsumeToken()
+        {
+            return _tokens.Dequeue();
+        }
 
 
         public Tokenizer(CharacterReader reader)
@@ -16,15 +21,17 @@ namespace DG.Yaml.Tokenization
             _reader = reader;
             _tokens = new Queue<Token>();
             _state = new TokenizationState(reader);
+
+            _plainScalarTokenizer = new PlainScalarTokenizer(_state);
         }
 
         public bool TryRead()
         {
-            GetTokens();
-            return true;
+            GetTokensWhileNeeded();
+            return _state.CanRead;
         }
 
-        private void GetTokens()
+        private void GetTokensWhileNeeded()
         {
             GetNextToken();
             //if more tokens needed, try again.
@@ -48,7 +55,7 @@ namespace DG.Yaml.Tokenization
                 return;
             }
 
-
+            _tokens.Enqueue(_plainScalarTokenizer.GetToken());
 
             return;
         }

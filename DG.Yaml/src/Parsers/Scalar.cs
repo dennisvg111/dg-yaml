@@ -12,6 +12,11 @@ namespace DG.Yaml.Parsers
 
         public int Length => _buffer.Count;
 
+        public Scalar()
+        {
+            _buffer = new List<char>(1024);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(char c)
         {

@@ -44,12 +44,18 @@ namespace DG.Yaml
     public static class CharacterExtensions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsEmpty(this char c)
+        public static bool IsWhitespace(this char c)
         {
             return c == ' '
                 || c == '\t'
                 || c == '\r'
                 || c == '\n';
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsInlineWhitespace(this char c)
+        {
+            return c == ' ' || c == '\t';
         }
     }
 }

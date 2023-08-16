@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFramework>net452</TargetFramework>
     <AssemblyTitle>DG.Yaml</AssemblyTitle>
     <Product>DG.Yaml</Product>
     <Copyright>Copyright ©  2023</Copyright>

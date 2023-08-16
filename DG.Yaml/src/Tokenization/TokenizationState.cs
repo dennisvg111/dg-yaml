@@ -65,21 +65,43 @@
             for (int i = 0; i < count; i++)
             {
                 bool canRead = _reader.TryRead(out char ch);
-                UpdateState(!canRead, ch);
+                UpdateState(canRead, ch);
             }
         }
-
-        private void UpdateState(bool streamEnded, char character)
+        /// <inheritdoc/>
+        public int AdvanceNewline()
         {
-            if (!streamEnded)
+            if (!_canRead)
+            {
+                return 0;
+            }
+            if (_currentCharacter == '\r')
+            {
+                if (IsNext('\n'))
+                {
+                    Advance(2);
+                    return 2;
+                }
+                Advance(1);
+                return 1;
+            }
+            if (_currentCharacter == '\n')
+            {
+                Advance(1);
+                return 1;
+            }
+            return 0;
+        }
+
+        private void UpdateState(bool canRead, char character)
+        {
+            if (canRead)
             {
                 _currentCharacter = character;
                 UpdatePosition();
+                return;
             }
-            else
-            {
-                _canRead = false;
-            }
+            _canRead = false;
         }
 
         private void UpdatePosition()
