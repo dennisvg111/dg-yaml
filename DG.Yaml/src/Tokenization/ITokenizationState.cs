@@ -2,12 +2,11 @@
 {
     public interface ITokenizationState
     {
-        bool StreamStartTokenized { get; }
+        bool StartedReading { get; }
         bool CanRead { get; }
         char CurrentCharacter { get; }
 
-        int CurrentLine { get; }
-        int CurrentColumn { get; }
+        int CharactersSinceNewline { get; }
 
         void Advance(int count);
 

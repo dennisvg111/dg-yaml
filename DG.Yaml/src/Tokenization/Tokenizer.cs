@@ -39,9 +39,8 @@ namespace DG.Yaml.Tokenization
 
         private void GetNextToken()
         {
-            if (!_state.StreamStartTokenized)
+            if (!_state.StartedReading)
             {
-                _state.SetStreamStartTokenized();
                 _tokens.Enqueue(Token.ForStreamStart());
                 _state.Advance(1);
                 return;
