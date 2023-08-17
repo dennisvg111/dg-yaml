@@ -7,6 +7,7 @@
 
         public TokenType Type => _type;
         public bool HasContent => _content != null;
+        public string Content => _content;
 
         public Token(TokenType type, string content)
         {

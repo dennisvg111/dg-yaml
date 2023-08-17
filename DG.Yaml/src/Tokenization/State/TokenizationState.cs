@@ -1,4 +1,4 @@
-﻿namespace DG.Yaml.Tokenization
+﻿namespace DG.Yaml.Tokenization.State
 {
     public class TokenizationState : ITokenizationState
     {
@@ -6,12 +6,14 @@
         private bool _canRead;
         private char _currentCharacter;
         private int _charactersSinceNewline;
+        private long _line;
 
         public bool StartedReading => _charactersSinceNewline >= 0;
         public bool CanRead => _canRead;
         public char CurrentCharacter => _currentCharacter;
 
         public int CharactersSinceNewline => _charactersSinceNewline;
+        public long Line => _line;
 
         public TokenizationState(CharacterReader reader)
         {
@@ -20,6 +22,7 @@
             _canRead = true;
             _currentCharacter = '\0';
             _charactersSinceNewline = -1;
+            _line = 1;
         }
 
         public bool TryPeekNextCharacter(out char ch)
@@ -58,6 +61,12 @@
                 UpdateState(canRead, ch);
             }
         }
+
+        public bool IsInNewline()
+        {
+            return _currentCharacter == '\r' || _currentCharacter == '\n';
+        }
+
         /// <inheritdoc/>
         public int AdvanceNewline()
         {
@@ -91,6 +100,10 @@
                 UpdatePosition();
                 return;
             }
+            if (_canRead && _charactersSinceNewline < 0) //catch empty documents.
+            {
+                _charactersSinceNewline = 0;
+            }
             _canRead = false;
         }
 
@@ -99,6 +112,7 @@
             if (_currentCharacter == '\n')
             {
                 _charactersSinceNewline = 0;
+                _line++;
                 return;
             }
 

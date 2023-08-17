@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using DG.Yaml.Tokenization.State;
+using System.Collections.Generic;
 
 namespace DG.Yaml.Tokenization
 {
-    public class Tokenizer
+    public class MainTokenizer
     {
         private readonly CharacterReader _reader;
         private readonly Queue<Token> _tokens;
@@ -16,7 +17,7 @@ namespace DG.Yaml.Tokenization
         }
 
 
-        public Tokenizer(CharacterReader reader)
+        public MainTokenizer(CharacterReader reader)
         {
             _reader = reader;
             _tokens = new Queue<Token>();

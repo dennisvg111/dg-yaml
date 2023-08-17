@@ -1,4 +1,5 @@
 ﻿using DG.Yaml.Parsers;
+using DG.Yaml.Tokenization.State;
 
 namespace DG.Yaml.Tokenization
 {
@@ -23,7 +24,7 @@ namespace DG.Yaml.Tokenization
                     break;
                 }
 
-                ParseNonEmpties(scalar);
+                ParseNonEmpties(scalar, whitespace);
 
                 if (!_state.CurrentCharacter.IsWhitespace())
                 {
@@ -53,7 +54,7 @@ namespace DG.Yaml.Tokenization
             return false;
         }
 
-        private void ParseNonEmpties(Scalar scalar)
+        private void ParseNonEmpties(Scalar scalar, WhitespaceState whitespace)
         {
             while (_state.CanRead && !_state.CurrentCharacter.IsWhitespace())
             {
@@ -66,28 +67,59 @@ namespace DG.Yaml.Tokenization
                     }
                 }
 
+                WriteWhitespaceToScalar(scalar, whitespace);
+
                 scalar.Write(_state.CurrentCharacter);
                 _state.Advance(1);
             }
+        }
+
+        private void WriteWhitespaceToScalar(Scalar scalar, WhitespaceState whitespace)
+        {
+            if (!whitespace.IsLeadingBlanks && whitespace.WhitespaceLength == 0)
+            {
+                return;
+            }
+            if (!whitespace.IsLeadingBlanks)
+            {
+                scalar.Write(whitespace.GetWhitespace());
+                whitespace.ClearWhitespace();
+                return;
+            }
+
+            if (!whitespace.HasTrailingNewline)
+            {
+                scalar.Write(' ');
+            }
+            else
+            {
+                scalar.Write(whitespace.GetTrailingNewline());
+                whitespace.SetTrailingNewlineLength(0);
+            }
+            whitespace.SetLeadingNewlineLength(0);
         }
 
         private void ParseWhitespace(WhitespaceState whitespace)
         {
             while (_state.CurrentCharacter.IsWhitespace())
             {
-                if (_state.CurrentCharacter.IsInlineWhitespace())
+                if (_state.IsInNewline())
                 {
-                    ParseInlineWhitespace(whitespace);
+                    ParseNewlines(whitespace);
                 }
                 else
                 {
-                    ParseNewlines(whitespace);
+                    ParseInlineWhitespace(whitespace);
                 }
             }
         }
 
         private void ParseInlineWhitespace(WhitespaceState whitespace)
         {
+            if (!whitespace.IsLeadingBlanks)
+            {
+                whitespace.AppendWhitespace(_state.CurrentCharacter);
+            }
 
             _state.Advance(1);
         }
@@ -97,32 +129,11 @@ namespace DG.Yaml.Tokenization
             int newlineLength = _state.AdvanceNewline();
             if (!whitespace.IsLeadingBlanks)
             {
-
+                whitespace.SetLeadingNewlineLength(newlineLength);
+                whitespace.ClearWhitespace();
+                return;
             }
-        }
-
-        private class WhitespaceState
-        {
-            private int _leadingNewlineLength;
-            private int _trailingNewlineLength;
-
-            public bool IsLeadingBlanks { get; set; }
-            public int WhitespaceLength { get; set; }
-
-            public WhitespaceState()
-            {
-
-            }
-
-            public void SetLeadingNewlineLength(int leadingNewlineLength)
-            {
-                _leadingNewlineLength = leadingNewlineLength;
-            }
-
-            public void SetTrailingNewlineLength(int trailingNewlineLength)
-            {
-                _trailingNewlineLength = trailingNewlineLength;
-            }
+            whitespace.SetTrailingNewlineLength(newlineLength);
         }
     }
 }

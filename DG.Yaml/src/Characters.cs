@@ -43,6 +43,11 @@ namespace DG.Yaml
 
     public static class CharacterExtensions
     {
+        /// <summary>
+        /// Indicates if this character is a space, tab, or (part of) a newline.
+        /// </summary>
+        /// <param name="c"></param>
+        /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsWhitespace(this char c)
         {

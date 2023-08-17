@@ -24,6 +24,12 @@ namespace DG.Yaml.Parsers
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Write(string s)
+        {
+            _buffer.AddRange(s);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
             _buffer.Clear();

@@ -1,4 +1,4 @@
-﻿namespace DG.Yaml.Tokenization
+﻿namespace DG.Yaml.Tokenization.State
 {
     public interface ITokenizationState
     {
@@ -7,6 +7,7 @@
         char CurrentCharacter { get; }
 
         int CharactersSinceNewline { get; }
+        long Line { get; }
 
         void Advance(int count);
 
@@ -21,5 +22,6 @@
         /// </summary>
         /// <returns></returns>
         int AdvanceNewline();
+        bool IsInNewline();
     }
 }
