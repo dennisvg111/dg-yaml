@@ -62,11 +62,6 @@
             }
         }
 
-        public bool IsInNewline()
-        {
-            return _currentCharacter == '\r' || _currentCharacter == '\n';
-        }
-
         /// <inheritdoc/>
         public int AdvanceNewline()
         {

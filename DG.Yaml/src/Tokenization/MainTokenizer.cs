@@ -1,26 +1,25 @@
 ﻿using DG.Yaml.Tokenization.State;
-using System.Collections.Generic;
 
 namespace DG.Yaml.Tokenization
 {
     public class MainTokenizer
     {
         private readonly CharacterReader _reader;
-        private readonly Queue<Token> _tokens;
         private readonly TokenizationState _state;
+        private readonly TokenQueue _tokens;
 
         private readonly PlainScalarTokenizer _plainScalarTokenizer;
 
         public Token ConsumeToken()
         {
-            return _tokens.Dequeue();
+            return _tokens.Take();
         }
 
 
         public MainTokenizer(CharacterReader reader)
         {
             _reader = reader;
-            _tokens = new Queue<Token>();
+            _tokens = new TokenQueue();
             _state = new TokenizationState(reader);
 
             _plainScalarTokenizer = new PlainScalarTokenizer(_state);
@@ -42,7 +41,7 @@ namespace DG.Yaml.Tokenization
         {
             if (!_state.StartedReading)
             {
-                _tokens.Enqueue(Token.ForStreamStart());
+                _tokens.Append(Token.ForStreamStart());
                 _state.Advance(1);
                 return;
             }
@@ -51,11 +50,11 @@ namespace DG.Yaml.Tokenization
 
             if (!_state.CanRead)
             {
-                _tokens.Enqueue(Token.ForStreamEnd());
+                _tokens.Append(Token.ForStreamEnd());
                 return;
             }
 
-            _tokens.Enqueue(_plainScalarTokenizer.GetToken());
+            _tokens.Append(_plainScalarTokenizer.GetToken());
 
             return;
         }

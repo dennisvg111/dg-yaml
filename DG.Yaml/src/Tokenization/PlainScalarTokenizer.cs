@@ -3,7 +3,7 @@ using DG.Yaml.Tokenization.State;
 
 namespace DG.Yaml.Tokenization
 {
-    public class PlainScalarTokenizer
+    public class PlainScalarTokenizer : ITokenizer
     {
         private ITokenizationState _state;
 
@@ -103,7 +103,7 @@ namespace DG.Yaml.Tokenization
         {
             while (_state.CurrentCharacter.IsWhitespace())
             {
-                if (_state.IsInNewline())
+                if (_state.CurrentCharacter == '\r' || _state.CurrentCharacter == '\n')
                 {
                     ParseNewlines(whitespace);
                 }

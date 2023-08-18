@@ -22,6 +22,5 @@
         /// </summary>
         /// <returns></returns>
         int AdvanceNewline();
-        bool IsInNewline();
     }
 }
