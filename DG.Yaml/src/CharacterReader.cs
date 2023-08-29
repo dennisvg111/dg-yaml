@@ -1,12 +1,11 @@
 ﻿using DG.Common.Exceptions;
 using System;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace DG.Yaml
 {
-    public class CharacterReader : IDisposable
+    public class CharacterReader : IDisposable, ICharacterReader
     {
         private readonly Stream _stream;
         private readonly BinaryReader _reader;
@@ -17,10 +16,6 @@ namespace DG.Yaml
             get
             {
                 return _stream.Position;
-            }
-            set
-            {
-                _stream.Position = value;
             }
         }
 
@@ -103,24 +98,6 @@ namespace DG.Yaml
             int numRead = TryRead(count, out chars);
             _stream.Position = position;
             return numRead;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool IsNext(string input)
-        {
-            int count = input.Length;
-            if (TryPeek(count, out char[] chars) < count)
-            {
-                return false;
-            }
-            for (int i = 0; i < count; i++)
-            {
-                if (input[i] != chars[i])
-                {
-                    return false;
-                }
-            }
-            return true;
         }
 
         #region IDisposable support

@@ -2,7 +2,7 @@
 {
     public class TokenizationState : ITokenizationState
     {
-        private readonly CharacterReader _reader;
+        private readonly ICharacterReader _reader;
         private bool _canRead;
         private char _currentCharacter;
         private int _charactersSinceNewline;
@@ -15,7 +15,7 @@
         public int CharactersSinceNewline => _charactersSinceNewline;
         public long Line => _line;
 
-        public TokenizationState(CharacterReader reader)
+        public TokenizationState(ICharacterReader reader)
         {
             _reader = reader;
 
@@ -37,20 +37,6 @@
                 return false;
             }
             return ch == c;
-        }
-
-        public bool IsCurrent(string input)
-        {
-            if (!CanRead || CurrentCharacter != input[0])
-            {
-                return false;
-            }
-            return IsNext(input.Substring(1));
-        }
-
-        public bool IsNext(string input)
-        {
-            return _reader.IsNext(input);
         }
 
         public void Advance(int count)
