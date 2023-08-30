@@ -2,7 +2,7 @@
 {
     public class StreamState
     {
-        private readonly ICharacterReader _characterReader;
+        private readonly ICharacterReader _reader;
         private bool _canRead;
         private char _currentCharacter;
         private int _charactersSinceNewline;
@@ -17,7 +17,7 @@
 
         public StreamState(ICharacterReader characterReader)
         {
-            _characterReader = characterReader;
+            _reader = characterReader;
         }
 
 
@@ -34,7 +34,7 @@
         public bool IsNext(string input)
         {
             int count = input.Length;
-            if (_characterReader.TryPeek(count, out char[] chars) < count)
+            if (_reader.TryPeek(count, out char[] chars) < count)
             {
                 return false;
             }
@@ -49,8 +49,6 @@
         }
 
         #region advance
-
-
         public void Advance(int count)
         {
             for (int i = 0; i < count; i++)
@@ -69,7 +67,7 @@
             }
             if (_currentCharacter == '\r')
             {
-                if (IsNext('\n'))
+                if (_reader.TryPeek(out char possibleNewLine) && possibleNewLine == '\n')
                 {
                     Advance(2);
                     return 2;
