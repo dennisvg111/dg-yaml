@@ -20,8 +20,6 @@
             _reader = characterReader;
         }
 
-
-
         public bool IsCurrent(string input)
         {
             if (!CanRead || CurrentCharacter != input[0])
