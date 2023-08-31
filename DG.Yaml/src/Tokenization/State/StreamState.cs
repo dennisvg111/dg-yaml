@@ -5,6 +5,7 @@
         private readonly ICharacterReader _reader;
         private bool _canRead;
         private char _currentCharacter;
+        private char? _nextCharacter;
         private int _charactersSinceNewline;
         private long _line;
 
@@ -18,6 +19,12 @@
         public StreamState(ICharacterReader characterReader)
         {
             _reader = characterReader;
+        }
+
+        public bool TryPeekNextCharacter(out char ch)
+        {
+            ch = _nextCharacter ?? '\0';
+            return _nextCharacter.HasValue;
         }
 
         public bool IsCurrent(string input)
@@ -65,13 +72,9 @@
             }
             if (_currentCharacter == '\r')
             {
-                if (_reader.TryPeek(out char possibleNewLine) && possibleNewLine == '\n')
-                {
-                    Advance(2);
-                    return 2;
-                }
-                Advance(1);
-                return 1;
+                int newlineSize = (_nextCharacter.HasValue && _nextCharacter.Value == '\n') ? 2 : 1;
+                Advance(newlineSize);
+                return newlineSize;
             }
             if (_currentCharacter == '\n')
             {
@@ -87,6 +90,8 @@
             {
                 _currentCharacter = character;
                 UpdatePosition();
+                bool hasNext = _reader.TryPeek(out char nextCharacter);
+                _nextCharacter = hasNext ? nextCharacter : (char?)null;
                 return;
             }
             if (_canRead && _charactersSinceNewline < 0) //catch empty documents.
