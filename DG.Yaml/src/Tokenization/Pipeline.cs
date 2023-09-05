@@ -2,6 +2,7 @@
 {
     public class Pipeline
     {
-        private readonly
+        private readonly ITokenizer _defaultTokenizer;
+
     }
 }

@@ -5,9 +5,9 @@ namespace DG.Yaml.Tokenization
 {
     public class PlainScalarTokenizer : ITokenizer
     {
-        private ITokenizationState _state;
+        private TokenizationState _state;
 
-        public PlainScalarTokenizer(ITokenizationState state)
+        public PlainScalarTokenizer(TokenizationState state)
         {
             _state = state;
         }

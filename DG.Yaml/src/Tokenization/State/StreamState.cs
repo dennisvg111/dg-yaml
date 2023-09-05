@@ -63,7 +63,10 @@
             }
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Advances through the current newline, and returns the amount of characters advanced.
+        /// </summary>
+        /// <returns></returns>
         public int AdvanceNewline()
         {
             if (!_canRead)

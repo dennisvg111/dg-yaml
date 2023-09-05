@@ -1,4 +1,5 @@
 ﻿using DG.Yaml.Tokenization.State;
+using DG.Yaml.Utilities;
 
 namespace DG.Yaml.Tokenization
 {
@@ -6,7 +7,7 @@ namespace DG.Yaml.Tokenization
     {
         private readonly CharacterReader _reader;
         private readonly TokenizationState _state;
-        private readonly TokenQueue _tokens;
+        private readonly InsertionQueue<Token> _tokens;
 
         private readonly PlainScalarTokenizer _plainScalarTokenizer;
 
@@ -19,7 +20,7 @@ namespace DG.Yaml.Tokenization
         public MainTokenizer(CharacterReader reader)
         {
             _reader = reader;
-            _tokens = new TokenQueue();
+            _tokens = new InsertionQueue<Token>();
             _state = new TokenizationState(reader);
 
             _plainScalarTokenizer = new PlainScalarTokenizer(_state);

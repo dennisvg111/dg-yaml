@@ -1,20 +1,12 @@
 ﻿namespace DG.Yaml.Tokenization.State
 {
-    public class TokenizationState : ITokenizationState
+    public class TokenizationState
     {
+        private readonly StreamState _streamState;
 
-        public bool TryPeekNextCharacter(out char ch)
+        public TokenizationState(CharacterReader reader)
         {
-            return _reader.TryPeek(out ch);
-        }
-
-        public bool IsNext(char c)
-        {
-            if (!_reader.TryPeek(out char ch))
-            {
-                return false;
-            }
-            return ch == c;
+            _streamState = new StreamState(reader);
         }
     }
 }
