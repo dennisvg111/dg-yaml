@@ -3,6 +3,10 @@ using System.Collections.Generic;
 
 namespace DG.Yaml.Utilities
 {
+    /// <summary>
+    /// A queue that allows direct insertion, and operates on a First-In-First-Out basis.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public class InsertionQueue<T>
     {
         private readonly List<T> _items;
@@ -14,16 +18,25 @@ namespace DG.Yaml.Utilities
             _items = new List<T>();
         }
 
-        public void Append(T token)
+        public void Append(T item)
         {
-            _items.Add(token);
+            _items.Add(item);
         }
 
-        public void InsertAt(int index, T token)
+        public void AppendRange(IEnumerable<T> items)
         {
-            _items.Insert(index, token);
+            _items.AddRange(items);
         }
 
+        public void InsertAt(int index, T item)
+        {
+            _items.Insert(index, item);
+        }
+
+        /// <summary>
+        /// Takes the first item from the queue.
+        /// </summary>
+        /// <returns></returns>
         public T Take()
         {
             ThrowIf.Collection(_items, "queue").IsEmpty($"Cannot execute {nameof(Take)} operation on empty queue.");
