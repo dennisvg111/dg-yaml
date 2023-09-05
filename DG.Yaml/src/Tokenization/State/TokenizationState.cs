@@ -4,6 +4,8 @@
     {
         private readonly StreamState _streamState;
 
+        public StreamState Stream => _streamState;
+
         public TokenizationState(CharacterReader reader)
         {
             _streamState = new StreamState(reader);

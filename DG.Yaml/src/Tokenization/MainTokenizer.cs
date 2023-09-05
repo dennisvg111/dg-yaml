@@ -29,7 +29,7 @@ namespace DG.Yaml.Tokenization
         public bool TryRead()
         {
             GetTokensWhileNeeded();
-            return _state.CanRead;
+            return _state.Stream.CanRead;
         }
 
         private void GetTokensWhileNeeded()
@@ -40,16 +40,16 @@ namespace DG.Yaml.Tokenization
 
         private void GetNextToken()
         {
-            if (!_state.StartedReading)
+            if (!_state.Stream.StartedReading)
             {
                 _tokens.Append(Token.ForStreamStart());
-                _state.Advance(1);
+                _state.Stream.Advance(1);
                 return;
             }
 
             SkipToTokenStart();
 
-            if (!_state.CanRead)
+            if (!_state.Stream.CanRead)
             {
                 _tokens.Append(Token.ForStreamEnd());
                 return;
@@ -62,9 +62,9 @@ namespace DG.Yaml.Tokenization
 
         private void SkipToTokenStart()
         {
-            while (_state.CanRead)
+            while (_state.Stream.CanRead)
             {
-                switch (_state.CurrentCharacter)
+                switch (_state.Stream.CurrentCharacter)
                 {
                     case ' ':
                     case '\r':
@@ -73,7 +73,7 @@ namespace DG.Yaml.Tokenization
                     default:
                         return;
                 }
-                _state.Advance(1);
+                _state.Stream.Advance(1);
             }
         }
     }

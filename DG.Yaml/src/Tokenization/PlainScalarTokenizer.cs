@@ -19,14 +19,14 @@ namespace DG.Yaml.Tokenization
 
             while (true)
             {
-                if (_state.CurrentCharacter == Characters.Comment || IsDocumentIndicator())
+                if (_state.Stream.CurrentCharacter == Characters.Comment || IsDocumentIndicator())
                 {
                     break;
                 }
 
                 ParseNonEmpties(scalar, whitespace);
 
-                if (!_state.CurrentCharacter.IsWhitespace())
+                if (!_state.Stream.CurrentCharacter.IsWhitespace())
                 {
                     break;
                 }
@@ -39,15 +39,15 @@ namespace DG.Yaml.Tokenization
 
         private bool IsDocumentIndicator()
         {
-            if (_state.CharactersSinceNewline != 0)
+            if (_state.Stream.CharactersSinceNewline != 0)
             {
                 return false;
             }
-            if (_state.IsCurrent(Indicators.DocumentStart))
+            if (_state.Stream.IsCurrent(Indicators.DocumentStart))
             {
                 //check for empty after.
             }
-            if (_state.IsCurrent(Indicators.DocumentEnd))
+            if (_state.Stream.IsCurrent(Indicators.DocumentEnd))
             {
                 //check for empty after.
             }
@@ -56,12 +56,12 @@ namespace DG.Yaml.Tokenization
 
         private void ParseNonEmpties(Scalar scalar, WhitespaceState whitespace)
         {
-            while (_state.CanRead && !_state.CurrentCharacter.IsWhitespace())
+            while (_state.Stream.CanRead && !_state.Stream.CurrentCharacter.IsWhitespace())
             {
                 //check for mappings
-                if (_state.CurrentCharacter == Characters.MappingValue)
+                if (_state.Stream.CurrentCharacter == Characters.MappingValue)
                 {
-                    if (!_state.TryPeekNextCharacter(out char nextCharacter) || nextCharacter.IsWhitespace())
+                    if (!_state.Stream.TryPeekNextCharacter(out char nextCharacter) || nextCharacter.IsWhitespace())
                     {
                         break;
                     }
@@ -69,8 +69,8 @@ namespace DG.Yaml.Tokenization
 
                 WriteWhitespaceToScalar(scalar, whitespace);
 
-                scalar.Write(_state.CurrentCharacter);
-                _state.Advance(1);
+                scalar.Write(_state.Stream.CurrentCharacter);
+                _state.Stream.Advance(1);
             }
         }
 
@@ -101,9 +101,9 @@ namespace DG.Yaml.Tokenization
 
         private void ParseWhitespace(WhitespaceState whitespace)
         {
-            while (_state.CurrentCharacter.IsWhitespace())
+            while (_state.Stream.CurrentCharacter.IsWhitespace())
             {
-                if (_state.CurrentCharacter == '\r' || _state.CurrentCharacter == '\n')
+                if (_state.Stream.CurrentCharacter == '\r' || _state.Stream.CurrentCharacter == '\n')
                 {
                     ParseNewlines(whitespace);
                 }
@@ -118,15 +118,15 @@ namespace DG.Yaml.Tokenization
         {
             if (!whitespace.IsLeadingBlanks)
             {
-                whitespace.AppendWhitespace(_state.CurrentCharacter);
+                whitespace.AppendWhitespace(_state.Stream.CurrentCharacter);
             }
 
-            _state.Advance(1);
+            _state.Stream.Advance(1);
         }
 
         private void ParseNewlines(WhitespaceState whitespace)
         {
-            int newlineLength = _state.AdvanceNewline();
+            int newlineLength = _state.Stream.AdvanceNewline();
             if (!whitespace.IsLeadingBlanks)
             {
                 whitespace.SetLeadingNewlineLength(newlineLength);

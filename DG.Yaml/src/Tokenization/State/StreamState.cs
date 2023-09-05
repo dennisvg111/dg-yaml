@@ -18,6 +18,10 @@
 
         public StreamState(ICharacterReader characterReader)
         {
+            _canRead = true;
+            _currentCharacter = '\0';
+            _charactersSinceNewline = -1;
+            _line = 1;
             _reader = characterReader;
         }
 

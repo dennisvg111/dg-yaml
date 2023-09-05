@@ -11,13 +11,13 @@ namespace DG.Yaml.Tokenization.Exceptions
         public long Line => _line;
         public int Column => _column;
 
-        public TokenizationException(ITokenizationState state, string message) : base($"Exception on line {state.Line}, column {state.CharactersSinceNewline}: " + message)
+        public TokenizationException(TokenizationState state, string message) : base($"Exception on line {state.Stream.Line}, column {state.Stream.CharactersSinceNewline}: " + message)
         {
-            _line = state.Line;
-            _column = state.CharactersSinceNewline;
+            _line = state.Stream.Line;
+            _column = state.Stream.CharactersSinceNewline;
         }
 
-        public static TokenizationExceptionThrower WithState(ITokenizationState state)
+        public static TokenizationExceptionThrower WithState(TokenizationState state)
         {
             return new TokenizationExceptionThrower(state);
         }
@@ -25,9 +25,9 @@ namespace DG.Yaml.Tokenization.Exceptions
 
     public class TokenizationExceptionThrower
     {
-        private readonly ITokenizationState _state;
+        private readonly TokenizationState _state;
 
-        public TokenizationExceptionThrower(ITokenizationState state)
+        public TokenizationExceptionThrower(TokenizationState state)
         {
             _state = state;
         }
