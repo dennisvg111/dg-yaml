@@ -28,13 +28,18 @@ namespace DG.Yaml.Utilities
             _items.AddRange(items);
         }
 
+        /// <summary>
+        /// Inserts an item into the <see cref="InsertionQueue{T}"/> at the specified index.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="item"></param>
         public void InsertAt(int index, T item)
         {
             _items.Insert(index, item);
         }
 
         /// <summary>
-        /// Takes the first item from the queue.
+        /// Returns the first item from the <see cref="InsertionQueue{T}"/>, and then removes it.
         /// </summary>
         /// <returns></returns>
         public T Take()
@@ -45,12 +50,21 @@ namespace DG.Yaml.Utilities
             return first;
         }
 
+        /// <summary>
+        /// Returns the first item from the <see cref="InsertionQueue{T}"/>.
+        /// </summary>
+        /// <returns></returns>
         public T Peek()
         {
             ThrowIf.Collection(_items, "queue").IsEmpty($"Cannot execute {nameof(Peek)} operation on empty queue.");
             return _items[0];
         }
 
+        /// <summary>
+        /// Returns the item from the <see cref="InsertionQueue{T}"/> at the specified index.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
         public T this[int index]
         {
             get
