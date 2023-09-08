@@ -58,9 +58,9 @@ namespace DG.Yaml
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsInlineWhitespace(this char c)
+        public static bool IsNewlinePart(this char c)
         {
-            return c == ' ' || c == '\t';
+            return c == '\r' || c == '\n';
         }
     }
 }

@@ -59,12 +59,9 @@ namespace DG.Yaml.Tokenization
             while (_state.Stream.CanRead && !_state.Stream.CurrentCharacter.IsWhitespace())
             {
                 //check for mappings
-                if (_state.Stream.CurrentCharacter == Characters.MappingValue)
+                if (_state.Stream.CurrentCharacter == Characters.MappingValue && (!_state.Stream.TryPeekNextCharacter(out char nextCharacter) || nextCharacter.IsWhitespace()))
                 {
-                    if (!_state.Stream.TryPeekNextCharacter(out char nextCharacter) || nextCharacter.IsWhitespace())
-                    {
-                        break;
-                    }
+                    break;
                 }
 
                 WriteWhitespaceToScalar(scalar, whitespace);
@@ -103,7 +100,7 @@ namespace DG.Yaml.Tokenization
         {
             while (_state.Stream.CurrentCharacter.IsWhitespace())
             {
-                if (_state.Stream.CurrentCharacter == '\r' || _state.Stream.CurrentCharacter == '\n')
+                if (_state.Stream.CurrentCharacter.IsNewlinePart())
                 {
                     ParseNewlines(whitespace);
                 }
