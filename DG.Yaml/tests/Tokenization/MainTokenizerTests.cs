@@ -1,4 +1,5 @@
 ﻿using DG.Yaml.Tokenization;
+using FluentAssertions;
 using Xunit;
 
 namespace DG.Yaml.Tests.Tokenization
@@ -14,7 +15,7 @@ namespace DG.Yaml.Tests.Tokenization
             tokenizer.TryRead();
 
             var token = tokenizer.ConsumeToken();
-            Assert.Equal(TokenType.StreamStart, token.Type);
+            token.Type.Should().Be(TokenType.StreamStart);
         }
 
         [Fact]
@@ -22,15 +23,19 @@ namespace DG.Yaml.Tests.Tokenization
         {
             string file = "";
             var tokenizer = SetupTokenizerFromString(file);
+            tokenizer.ConsumeStart();
 
+            //read next.
             tokenizer.TryRead();
-            tokenizer.TryRead();
 
-            var token = tokenizer.ConsumeToken();
-            Assert.Equal(TokenType.StreamStart, token.Type);
+            Token lastToken = null;
+            do
+            {
+                lastToken = tokenizer.ConsumeToken();
+            } while (tokenizer.TryRead());
 
-            token = tokenizer.ConsumeToken();
-            Assert.Equal(TokenType.StreamEnd, token.Type);
+            lastToken.Should().NotBeNull();
+            lastToken.Type.Should().Be(TokenType.StreamEnd);
         }
     }
 }
